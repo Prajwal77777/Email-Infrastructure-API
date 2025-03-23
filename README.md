@@ -1,24 +1,60 @@
-# README
+## EMAIL INFRASTRUCTURE API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A starter repo for Rails API development that includes all the latest and greatest gems and pattern to start off an API development.
 
-Things you may want to cover:
+### Tech Stack
 
-* Ruby version
+Framework: Ruby on Rails
 
-* System dependencies
+## Getting Started
 
-* Configuration
+### 1. Setup Development Environment
 
-* Database creation
+Install the IDE or relevant ruby versions and gems.
 
-* Database initialization
+```bash
+bundle install
+```
 
-* How to run the test suite
+### 2. Create environment variables file by running:
 
-* Services (job queues, cache servers, search engines, etc.)
+```bash
+# skip this if you already have config/application.yml file existing
+bundle exec figaro install
+```
 
-* Deployment instructions
+Use following environment values for development in `config/application.yml`
 
-* ...
+```yaml
+BASE_DOMAIN: "http://localhost:3000"
+DB_USER: "<-DATABASE USER_NAME->"
+DB_NAME: "<-DATABASE_NAME->"
+DB_PASSWORD: "<-DATABASE_PASSWORD->"
+CLOUDFLARE_BASE_URL: "<-CLOUDFLARE_BASE_URL->"
+CLOUDFLARE_API_KEY: "<-CLOUDFLARE_API_KEY->"
+HETZNER_BASE_URL: "<-HETZNER_BASE_URL->"
+HETZNER_API_KEY: "<-HETZNER_API_KEY->"
+CLOUDFLARE_BASE_URL: "<-CLOUDFLARE_BASE_URL->"
+CLOUDFLARE_API_KEY: "<-CLOUDFLARE_API_KEY->"
+SSH_KEYS_NAME: "<-SSH_KEYS_NAME->"
+CLOUDFLARE_REGISTRAR_NAME: "<-CLOUDFLARE_REGISTRAR_NAME->"
+CLOUDFLARE_REGISTRAR_EMAIL: "<-CLOUDFLARE_REGISTRAR_EMAIL->"
+CLOUDFLARE_REGISTRAR_ADDRESS: "<-CLOUDFLARE_REGISTRAR_ADDRESS->"
+CLOUDFLARE_REGISTRAR_PHONE: "<-CLOUDFLARE_REGISTRAR_PHONE->"
+ ```
+
+### 3. Setup Database
+
+```
+rails db:create
+```
+
+### 4. Run the server
+
+Then, run the server
+
+```bash
+rails s
+```
+
+Enjoy coding
