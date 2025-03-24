@@ -35,6 +35,9 @@ gem "httparty", "~> 0.22.0"
 # environment variables management
 gem "figaro"
 
+# DNS Simple API client
+gem "dnsimple"
+
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"

@@ -9,4 +9,7 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   resources :email_servers, only: [ :create ]
+  resources :email_accounts, only: [ :create ] do
+    get :mail_server_status, on: :collection
+  end
 end
