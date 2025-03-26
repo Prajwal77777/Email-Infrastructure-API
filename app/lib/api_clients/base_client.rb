@@ -4,11 +4,12 @@ module ApiClients
   class BaseClient
     include HTTParty
 
-    attr_accessor :base_url, :api_key
+    attr_accessor :base_url, :api_key, :auth_type
 
-    def initialize(base_url, api_key)
+    def initialize(base_url, api_key, auth_type)
       @base_url = base_url
       @api_key = api_key
+      @auth_type = auth_type
     end
 
     def perform_request(method, url_path, payload = {})
@@ -17,12 +18,18 @@ module ApiClients
 
       headers = {
         "Content-Type" => "application/json",
-        "Accept" => "application/json",
-        "Authorization" => "Bearer #{@api_key}"
+        "Accept" => "application/json"
       }
+      case auth_type
+      when :bearer
+        headers["Authorization"] = "Bearer #{@api_key}"
+      when :api_key
+        headers["X-API-Key"]= @api_key
+      end
+
+      puts "Headers:#{headers}"
 
       response = HTTParty.send(method, url, headers: headers, body: payload.to_json)
-
       JSON.parse(response.body, symbolize_names: true)
     rescue HTTParty::Error => e
       if e&.response&.body&.present?
