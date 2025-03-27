@@ -36,6 +36,33 @@ module ApiClients
     def self.setup_mail_server_script(domain_name)
       <<~SCRIPT
         #cloud-config
+        write_files:
+          - path: opt/mailserver/docker-compose.yml
+            content: |
+              services:
+                mailserver:
+                  image: ghcr.io/docker-mailserver/docker-mailserver:latest
+                  container_name: mailserver
+                  hostname: mail.#{domain_name}
+                  env_file: mailserver.env
+                  ports:
+                    - "25:25"    # SMTP  (explicit TLS => STARTTLS, Authentication is DISABLED => use port 465/587 instead)
+                    - "143:143"  # IMAP4 (explicit TLS => STARTTLS)
+                    - "465:465"  # ESMTP (implicit TLS)
+                    - "587:587"  # ESMTP (explicit TLS => STARTTLS)
+                    - "993:993"  # IMAP4 (implicit TLS)
+                  volumes:
+                    - ./docker-data/dms/mail-data/:/var/mail/
+                    - ./docker-data/dms/mail-state/:/var/mail-state/
+                    - ./docker-data/dms/mail-logs/:/var/log/mail/
+                    - ./docker-data/dms/config/:/tmp/docker-mailserver/
+                    - /etc/localtime:/etc/localtime:ro
+                  restart: always
+                  stop_grace_period: 1m
+                  healthcheck:
+                    test: "ss --listening --tcp | grep -P 'LISTEN.+:smtp' || exit 1"
+                    timeout: 3s
+                    retries: 0
         runcmd:
           - apt-get update && apt upgrade -y
           - apt install -y ca-certificates curl gnupg
@@ -50,66 +77,9 @@ module ApiClients
           - systemctl enable docker
           - systemctl start docker
           - sleep 10
-          # Set up mail server
-          - umask
-          - cd /opt/
-          - git clone https://github.com/mailcow/mailcow-dockerized /opt/mailcow-dockerized
-          - cd /opt/mailcow-dockerized/
-          - chmod +x generate_config.sh
-          - ./generate_config.sh
-          # Create mailcow.conf file
-          - echo "MAILCOW_HOSTNAME=mail.#{domain_name}" > mailcow.conf
-          - echo "TZ=UTC" >> mailcow.conf
-
-          # Append additional environment variables
-          - echo "DBNAME=mailcow" >> mailcow.conf
-          - echo "DBUSER=mailcow" >> mailcow.conf
-          - echo "DBPASS=xTXfua5bRPqCsKpliaq0B2W1kVMU" >> mailcow.conf
-          - echo "DBROOT=FaoBGlDlSjIHXs9vd8udPmejqvln" >> mailcow.conf
-          - echo "REDISPASS=pygB8hOUEX8Uuu8mdGt3DpIB2XFQ" >> mailcow.conf
-          - echo "HTTP_PORT=80" >> mailcow.conf
-          - echo "HTTP_BIND=" >> mailcow.conf
-          - echo "HTTPS_PORT=443" >> mailcow.conf
-          - echo "HTTPS_BIND=" >> mailcow.conf
-          - echo "HTTP_REDIRECT=n" >> mailcow.conf
-          - echo "SMTP_PORT=25" >> mailcow.conf
-          - echo "SMTPS_PORT=465" >> mailcow.conf
-          - echo "SUBMISSION_PORT=587" >> mailcow.conf
-          - echo "IMAP_PORT=143" >> mailcow.conf
-          - echo "IMAPS_PORT=993" >> mailcow.conf
-          - echo "POP_PORT=110" >> mailcow.conf
-          - echo "POPS_PORT=995" >> mailcow.conf
-          - echo "SIEVE_PORT=4190" >> mailcow.conf
-          - echo "DOVEADM_PORT=127.0.0.1:19991" >> mailcow.conf
-          - echo "SQL_PORT=127.0.0.1:13306" >> mailcow.conf
-          - echo "REDIS_PORT=127.0.0.1:7654" >> mailcow.conf
-          - echo "COMPOSE_PROJECT_NAME=mailcowdockerized" >> mailcow.conf
-          - echo "DOCKER_COMPOSE_VERSION=native" >> mailcow.conf
-          - echo "ACL_ANYONE=disallow" >> mailcow.conf
-          - echo "MAILDIR_GC_TIME=7200" >> mailcow.conf
-          - echo "ADDITIONAL_SAN=" >> mailcow.conf
-          - echo "AUTODISCOVER_SAN=y" >> mailcow.conf
-          - echo "ADDITIONAL_SERVER_NAMES=" >> mailcow.conf
-          - echo "SKIP_LETS_ENCRYPT=n" >> mailcow.conf
-          - echo "ENABLE_SSL_SNI=n" >> mailcow.conf
-          - echo "SKIP_IP_CHECK=n" >> mailcow.conf
-          - echo "SKIP_HTTP_VERIFICATION=n" >> mailcow.conf
-          - echo "SKIP_UNBOUND_HEALTHCHECK=n" >> mailcow.conf
-          - echo "SKIP_CLAMD=n" >> mailcow.conf
-          - echo "SKIP_SOGO=n" >> mailcow.conf
-          - echo "SKIP_FTS=n" >> mailcow.conf
-          - echo "FTS_HEAP=128" >> mailcow.conf
-          - echo "FTS_PROCS=1" >> mailcow.conf
-          - echo "ALLOW_ADMIN_EMAIL_LOGIN=n" >> mailcow.conf
-          - echo "USE_WATCHDOG=y" >> mailcow.conf
-          - echo "MAILDIR_SUB=Maildir" >> mailcow.conf
-          - echo "SOGO_EXPIRE_SESSION=480" >> mailcow.conf
-          - echo "DOVECOT_MASTER_USER=" >> mailcow.conf
-          - echo "DOVECOT_MASTER_PASS=" >> mailcow.conf
-          - echo "ACME_CONTACT=" >> mailcow.conf
-          - echo "WEBAUTHN_ONLY_TRUSTED_VENDORS=n" >> mailcow.conf
-          - echo "SPAMHAUS_DQS_KEY=" >> mailcow.conf
-          - echo "DISABLE_NETFILTER_ISOLATION_RULE=n" >> mailcow.conf
+          - mkdir -p /opt/mailserver/data /opt/mailserver/config
+          - cd /opt/mailserver
+          - wget "https://raw.githubusercontent.com/docker-mailserver/docker-mailserver/master/mailserver.env"
 
           - docker-compose pull
           - docker-compose up -d

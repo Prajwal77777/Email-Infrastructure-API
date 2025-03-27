@@ -1,28 +1,47 @@
 class EmailAccountsController < ApplicationController
   def create
-    response = ApiClients::MailCowService.create_email_account_on_server(email_account_params)
-    puts "================#{response}"
-    if response[:error]
-      render json: { error: response[:error] }, status: :unprocessable_entity
-    else
-      render json: { message: "Email account created successfully", email_account: response }, status: :created
+    server_config = {
+      server_host: Figaro.env.SERVER_HOST_IP,
+      ssh_username: Figaro.env.SSH_USER_NAME,
+      ssh_key: Figaro.env.SSH_KEY_PATH,
+      docker_container: "mailserver"
+    }
+    email_account_service = ApiClients::EmailAccountService.new(server_config)
+
+    begin
+     response = email_account_service.create_email_account(email_account_params)
+
+      render json: { message: "Email account creation initiated.", data: response }, status: :created
+    rescue StandardError => e
+      render json: { error: e.message }, status: :unprocessable_entity
     end
   end
 
+  def index
+  end
+
   def mail_server_status
-    response = ApiClients::MailCowService.mail_server_status
+    server_config = {
+      server_host: Figaro.env.SERVER_HOST_IP,
+      ssh_username: Figaro.env.SSH_USER_NAME,
+      ssh_key: Figaro.env.SSH_KEY_PATH,
+      docker_container: "mailserver"
+    }
+    email_account_service = ApiClients::EmailAccountService.new(server_config)
+
+    server_status = email_account_service.check_server_status
+
     if response[:error]
       render json: { error: response[:error] }, status: :unprocessable_entity
     else
-      filtered_status = response.slice(:'postfix-mailcow', :'dovecot-mailcow')
 
-      render json: { message: "Mail server is running", data: filtered_status }, status: :ok
+      render json: { message: "Mail server is running", data: server_status }, status: :ok
     end
   end
 
   private
 
     def email_account_params
-      params.require(:email_account).permit(:local_part, :domain, :first_name, :last_name, :password, :password2, tags: [])
+      params.permit(:domain, :first_name, :last_name, :password)
     end
 end
