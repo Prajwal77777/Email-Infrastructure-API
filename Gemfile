@@ -30,7 +30,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # HTTP client
-gem "httparty", "~> 0.22.0"
+gem "httparty", "~> 0.23.0"
 
 # environment variables management
 gem "figaro"
