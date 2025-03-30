@@ -8,7 +8,10 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
-  resources :email_servers, only: [ :create ]
+  resources :email_servers, only: [ :create ] do
+    post :buy_domain, on: :collection
+    post :setup_mail_records, on: :collection
+  end
   resources :email_accounts, only: [ :create, :index ] do
     get :mail_server_status, on: :collection
   end

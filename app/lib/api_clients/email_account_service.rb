@@ -1,7 +1,7 @@
 require "net/ssh"
 module ApiClients
   class EmailAccountService
-    IMAP_PORT = 153
+    IMAP_PORT = 143
     SMTP_PORT = 587
 
     def initialize(server_config)
@@ -71,16 +71,18 @@ module ApiClients
         password: password,
         name: "#{first_name} #{last_name}",
         imap_server_credentials: {
-          server: @server_host,
+          server: "mail.#{domain}",
           port: IMAP_PORT,
           protocol: "IMAP",
-          security: "STARTTLS"
+          security: "STARTTLS",
+          server_ip: @server_host
         },
         smtp_server_credentials: {
-          server: @server_host,
+          server: "mail.#{domain}",
           port: SMTP_PORT,
           protocol: "SMTP",
-          security: "STARTTLS"
+          security: "STARTTLS",
+          server_ip: @server_host
         },
         additional_info: {
           first_name: first_name,

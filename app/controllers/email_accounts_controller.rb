@@ -35,7 +35,7 @@ class EmailAccountsController < ApplicationController
       render json: { error: response[:error] }, status: :unprocessable_entity
     else
 
-      render json: { message: "Mail server is running", data: server_status }, status: :ok
+      render json: { status: 200, message: "Mail server is running", data: server_status }, status: :ok
     end
   end
 
